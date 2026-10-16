@@ -2,7 +2,7 @@
 
 Implementation for paper: **Attribution-guided Substructure-aware Mixture-of-Experts for Molecular Property Prediction**
 
-This repository contains the full ASE-Mol model for binary molecular property prediction. The method uses BRICS fragments, attribution-guided positive/negative motif recognition, and task-specific positive/negative mixture-of-experts routing. Training has two stages: motif recognition and expert learning. Only the main experiment is included.
+This repository contains the full ASE-Mol model for binary molecular property prediction. The method uses BRICS fragments, attribution-guided positive/negative motif recognition, and task-specific positive/negative mixture-of-experts routing. Training has two stages: motif recognition and expert learning.
 
 ## Requirements
 
