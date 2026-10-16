@@ -91,7 +91,7 @@ def run_training(args):
         _log_line(log, "Hyperparameters: batch=%s  lr=%s  weight_decay=%s  experts=%s  topk_rate=%s" %
                   (args.batch_size, args.lr, args.decay, args.num_experts, args.topk_rate))
         _log_line(log, "                 alpha=%s  beta=%s  pre_lr=%s  pre_epochs=%s  train_epochs=%s" %
-                  (args.pre_cl, args.cl, args.pre_lr, args.pre_epoch, args.epochs))
+                  (args.alpha, args.beta, args.pre_lr, args.pre_epoch, args.epochs))
         _log_line(log, "")
         _log_line(log, "[1] Pre-training")
         _log_line(log, "  Epoch    Loss")

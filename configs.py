@@ -62,8 +62,8 @@ def parse_args(argv=None):
     p.add_argument("--pre_lr", type=float, default=1e-3, help="Recognition-stage base learning rate")
     p.add_argument("--lr", type=float, default=1e-3, help="Expert-stage head base learning rate")
     p.add_argument("--decay", type=float, default=1e-5, help="Weight decay, not learning rate decay")
-    p.add_argument("--alpha", dest="pre_cl", type=float, default=0.1)
-    p.add_argument("--beta", dest="cl", type=float, default=0.1)
+    p.add_argument("--alpha", dest="alpha", type=float, default=0.1)
+    p.add_argument("--beta", dest="beta", type=float, default=0.1)
     p.add_argument("--tau", type=float, default=0.1)
     p.add_argument("--gamma", type=float, default=0.1)
     p.add_argument("--margin", type=float, default=0.5)
@@ -84,7 +84,7 @@ def parse_args(argv=None):
         p.error("Invalid dropout, temperature, or routing noise")
     if a.representation_scale <= 0 or a.margin_temperature <= 0 or not 0 <= a.margin <= 1:
         p.error("Invalid representation scale or motif margin settings")
-    if a.lr <= 0 or a.pre_lr <= 0 or a.decay < 0 or min(a.cl, a.pre_cl, a.gamma) < 0:
+    if a.lr <= 0 or a.pre_lr <= 0 or a.decay < 0 or min(a.beta, a.alpha, a.gamma) < 0:
         p.error("Learning rates must be positive and regularization nonnegative")
     if any(isinstance(v, float) and not math.isfinite(v) for v in vars(a).values()):
         p.error("Floating-point arguments must be finite")

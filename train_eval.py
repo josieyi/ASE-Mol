@@ -24,7 +24,7 @@ def pre_train(args, model, loader, optimizer, cache, schedule=None):
         labels = batch.y.reshape(-1, args.num_tasks)
         task = masked_bce(logits, labels)
         margin = model.margin_loss(whole, hp, hn, labels)
-        loss = task + args.pre_cl * margin
+        loss = task + args.alpha * margin
         gradient_step(args, loss, model, optimizer, schedule)
 
         with torch.no_grad():
@@ -75,7 +75,7 @@ def train(args, model, loader, optimizer, cache, schedule=None):
         labels = batch.y.reshape(-1, args.num_tasks)
         logits = model(batch, pos, neg)
         loss = masked_bce(logits, labels)
-        loss = loss + args.cl * model.compute_importance_and_loss()
+        loss = loss + args.beta * model.compute_importance_and_loss()
 
         with torch.no_grad():
             import math
