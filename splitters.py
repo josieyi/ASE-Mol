@@ -8,7 +8,6 @@ import torch
 from rdkit import Chem
 from rdkit.Chem.Scaffolds import MurckoScaffold
 from configs import SPLIT, SPLIT_SEED
-from util import write_json
 
 
 def generate_scaffold(smiles, include_chirality=False):
@@ -63,11 +62,6 @@ def data_split(args, dataset):
         parts = [[lookup[v] for v in manifest[k]] for k in ("train_ids", "valid_ids", "test_ids")]
     else:
         parts = scaffold_indices(smiles, SPLIT_SEED)
-        manifest = {"version": "ase-reconstruction-v2", "raw_sha256": dataset.raw_sha256,
-                    "split": SPLIT, "split_seed": SPLIT_SEED, "rule": "chemprop-v1.6.1",
-                    "scaffold_variant": "balanced"}
-        for key, indices in zip(("train_ids", "valid_ids", "test_ids"), parts):
-            manifest[key] = [ids[i] for i in indices]
     flat = [i for p in parts for i in p]
     if len(flat) != len(dataset) or set(flat) != set(range(len(dataset))):
         raise ValueError("Split must be a non-overlapping, exhaustive partition")
@@ -76,9 +70,4 @@ def data_split(args, dataset):
     sets = [{generate_scaffold(smiles[i]) for i in p} for p in parts]
     if any(sets[i] & sets[j] for i in range(3) for j in range(i)):
         raise ValueError("Scaffold overlap across partitions")
-    output = Path(args.output_dir) / "split.json"
-    if not output.exists():
-        write_json(output, manifest)
-    elif json.loads(output.read_text(encoding="utf-8")) != manifest:
-        raise ValueError("Existing split manifest differs from current split")
     return tuple(dataset[torch.tensor(p, dtype=torch.long)] for p in parts)

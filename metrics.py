@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 
-"""ROC-AUC evaluation and test prediction records."""
-import json
-from pathlib import Path
 import numpy as np
 
 class UndefinedROCError(ValueError):
@@ -51,25 +48,6 @@ def roc_details(y_true, y_scores):
             "excluded_tasks": excluded, "evaluated_tasks": len(values),
             "status": "ok", "label_counts": counts}
 
-def save_test_result(output, ids, labels, scores):
-    """Save raw predictions before computing ROC-AUC; propagate undefined metrics."""
-    output = Path(output)
-    np.savez_compressed(output / "test_predictions.npz", ids=ids, labels=labels, scores=scores)
-    metadata = {"direction": "prediction", "deployable": True, "n": len(ids)}
-    try:
-        report = roc_details(labels, scores)
-    except UndefinedROCError as exc:
-        report = dict(metadata, roc_auc=None, status="undefined", reason="no_task_with_both_classes",
-                      label_counts=exc.counts)
-        (output / "test_metrics.json").write_text(json.dumps(report, ensure_ascii=False, indent=2,
-                                                               allow_nan=False), encoding="utf-8")
-        raise
-    report.update(metadata)
-    (output / "test_metrics.json").write_text(json.dumps(report, ensure_ascii=False, indent=2,
-                                                          allow_nan=False), encoding="utf-8")
-    return report
-
-
 def audit_dataset(args, dataset, subsets):
     """Report observed labels and reject splits with undefined validation/test AUC."""
     parts = {}
@@ -88,12 +66,10 @@ def audit_dataset(args, dataset, subsets):
             errors.append("train: no_observed_labels")
         elif name in ("valid", "test") and not count["roc_auc_defined"]:
             errors.append(name + ": no_task_with_both_classes")
-    return {"status": "failed" if errors else "ok", "errors": errors, "splits": counts,
-            "dataset": args.dataset, "split": args.split, "split_seed": args.split_seed,
-            "raw_sha256": dataset.raw_sha256, "split_modified": False}
+    return {"status": "failed" if errors else "ok", "errors": errors, "splits": counts}
 
 
-def require_usable_split(report, report_path):
+def require_usable_split(report):
     if report["status"] != "ok":
         details = []
         for name in ("valid", "test"):
@@ -102,5 +78,5 @@ def require_usable_split(report, report_path):
                 for task, values in count["per_task"].items():
                     details.append("%s task=%s negative=%d positive=%d missing=%d" % (
                         name, task, values["negative"], values["positive"], values["missing"]))
-        raise ValueError("Preflight dataset audit failed before training: %s; %s; details: %s. Split was not modified." % (
-            ", ".join(report["errors"]), "; ".join(details), report_path))
+        raise ValueError("Dataset split invalid before training: %s; %s" % (
+            ", ".join(report["errors"]), "; ".join(details)))

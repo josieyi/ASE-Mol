@@ -7,7 +7,7 @@ import torch
 from torch_geometric.data import Data, InMemoryDataset
 from rdkit import Chem
 from rdkit.Chem import BRICS, AllChem
-from util import sha256, write_json
+from util import sha256
 from util import load_trusted_artifact
 
 FEATURE_VERSION = "ase-mol"
@@ -92,13 +92,11 @@ class MoleculeDataset(InMemoryDataset):
 
         source_frame = pd.read_csv(self.raw_paths[0])
         smiles = source_frame["mol" if self.dataset == "bace" else "smiles"].tolist()
-        records, excluded = [], []
+        records = []
         for i, (text, mol, target) in enumerate(zip(smiles, mols, labels)):
             if mol is None or mol.GetNumAtoms() == 0:
-                excluded.append({"id": i, "reason": "invalid_or_empty_molecule"})
                 continue
             if any(a.GetAtomicNum() == 0 for a in mol.GetAtoms()):
-                excluded.append({"id": i, "reason": "dummy_atom"})
                 continue
             target = np.asarray(target).reshape(-1)
             if not np.isin(target, [-1, 0, 1]).all():
@@ -111,9 +109,6 @@ class MoleculeDataset(InMemoryDataset):
             raise ValueError("No valid molecules remain after preprocessing")
         data, slices = self.collate(records)
         torch.save((data, slices), self.processed_paths[0])
-        write_json(Path(self.processed_paths[0]).with_suffix(".json"),
-                   {"raw_sha256": self.raw_sha256, "feature_version": FEATURE_VERSION,
-                    "raw_rows": len(mols), "kept": len(records), "excluded": excluded})
 
 def _load_tox21_dataset(input_path):
     """

@@ -39,8 +39,6 @@ def parse_args(argv=None):
     p.add_argument("--dataset_dir", default="./data/")
     p.add_argument("--dataset", choices=tuple(TASKS), default="bbbp")
     p.add_argument("--output_dir", default="runs/bbbp_gcn_seed0")
-    p.add_argument("--log_file", default="", help="Optional extra formatted training log path")
-    p.add_argument("--log_only_run", default="", help="Format a recorded run without training")
     p.add_argument("--seed", type=int, default=0, help="Training seed; does not change the fixed scaffold split")
     p.add_argument("--split", choices=(SPLIT,), default=SPLIT,
                    help="Fixed balanced scaffold algorithm (short CLI name: scaffold)")
@@ -72,15 +70,11 @@ def parse_args(argv=None):
     p.add_argument("--margin_temperature", type=float, default=1.0)
     p.add_argument("--router_noise_std", type=float, default=0.01)
     p.add_argument("--input_model_file", "-i", default="", help="Strictly compatible GNN encoder state_dict")
-    p.add_argument("--ckpt_all", "-c", default="", help="Full checkpoint for evaluation")
-    p.add_argument("--validate_only", action="store_true", help="Skip test prediction")
-    p.add_argument("--eval_only", action="store_true")
-    p.add_argument("--preflight_only", action="store_true", help="Check splits before training")
     p.add_argument("--grad_clip", type=float, default=1.0)
     p.add_argument("--patience", type=int, default=0, help="0 disables early stopping")
     a = p.parse_args(argv)
     a.num_tasks = TASKS[a.dataset]
-    # Compatibility and manifest metadata, not separate configurable parameters.
+
     a.split_seed = SPLIT_SEED
     if not 0 < a.topk_rate <= 0.5:
         p.error("topk_rate must lie in (0, 0.5]")
@@ -100,12 +94,6 @@ def parse_args(argv=None):
         warmup = OPTIMIZATION[stage]["warmup_epochs"]
         if warmup >= epochs:
             p.error("%s training requires more than %d epochs for its fixed warmup" % (stage, warmup))
-    if a.eval_only and not a.ckpt_all:
-        p.error("eval_only requires ckpt_all")
-    if a.preflight_only and (a.eval_only or a.validate_only or a.ckpt_all):
-        p.error("preflight_only is incompatible with eval_only/validate_only/ckpt_all")
-    if a.ckpt_all and not a.eval_only:
-        p.error("ckpt_all is evaluation-only; resume training is not supported")
     return a
 
 
