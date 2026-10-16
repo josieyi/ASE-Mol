@@ -169,7 +169,6 @@ def run_training(args):
             args, model, make_loader(args, test), test_cache)
         report = roc_details(labels, scores)
         _log_line(log, "  Corresponding test   : %.4f" % report["roc_auc"])
-        _log_line(log, "  Selection rule: validation ROC-AUC only; no test-based selection.")
         _log_line(log, RULE)
 
     summary = {

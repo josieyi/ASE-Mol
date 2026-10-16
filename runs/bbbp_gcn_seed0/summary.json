@@ -1,0 +1,5 @@
+{
+  "best_validation_auc": 89.78392909587076,
+  "best_epoch": 110,
+  "test_roc_auc": 76.50462962197918
+}
